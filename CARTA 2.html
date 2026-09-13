@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para ti</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@500;700&display=swap');
+
+  :root{
+    --cream: #fbf0ea;
+    --paper: #fffaf5;
+    --rose: #b5495b;
+    --rose-dark: #7a2f3d;
+    --sage: #8a9a5b;
+    --sage-dark: #5f6d3d;
+    --gold: #cf9a4c;
+    --plum: #3f2430;
+    --line: rgba(63,36,48,0.12);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: var(--cream);
+    font-family: 'Playfair Display', serif;
+    color: var(--plum);
+    overflow-x: hidden;
+  }
+
+  .stage{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding: 24px;
+  }
+
+  /* --- flores decorativas de fondo (SVG) --- */
+  .bg-flowers{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+  .bg-flowers svg{ position:absolute; }
+
+  /* --- SOBRE --- */
+  #envelope-view{
+    position:relative;
+    z-index:1;
+    text-align:center;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  #envelope-view.hidden{
+    opacity:0;
+    transform: scale(0.92);
+    pointer-events:none;
+    position:absolute;
+  }
+
+  .envelope-wrap{
+    width: 300px;
+    max-width: 78vw;
+    margin: 0 auto 28px auto;
+    filter: drop-shadow(0 18px 30px rgba(90,40,50,0.18));
+  }
+
+  .envelope{
+    position:relative;
+    width:100%;
+    height: 0;
+    padding-top: 66.6%; /* mantiene proporción 3:2 en cualquier navegador */
+    cursor: pointer;
+  }
+
+  .env-body{
+    position:absolute; inset:0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .env-body::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(181,73,91,0.05), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(138,154,91,0.06), transparent 40%);
+  }
+
+  .env-shadow-fold{
+    position:absolute; left:0; right:0; bottom:0; top:38%;
+    background: linear-gradient(180deg, rgba(63,36,48,0.05), rgba(63,36,48,0.09));
+    clip-path: polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .env-flap{
+    position:absolute; top:0; left:0; right:0;
+    height: 58%;
+    background: linear-gradient(160deg, #ffffff, #f6e9e2);
+    clip-path: polygon(0 0, 100% 0, 50% 88%);
+    border: 1px solid var(--line);
+    transform-origin: top center;
+    transition: transform 0.9s cubic-bezier(.6,.1,.3,1);
+    z-index:3;
+  }
+
+  .seal{
+    position:absolute;
+    top: 50%; left:50%;
+    transform: translate(-50%, -55%);
+    width: 64px; height:64px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #c95a6b, var(--rose-dark));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 3px 8px rgba(63,36,48,0.35);
+    z-index:4;
+    cursor:pointer;
+    border:none;
+  }
+  .seal svg{ width:26px; height:26px; }
+
+  .open-label{
+    margin-top: 18px;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.6rem;
+    color: var(--rose-dark);
+    letter-spacing: 0.5px;
+  }
+
+  .envelope.opened .env-flap{
+    transform: rotateX(180deg);
+  }
+
+  /* --- CARTA --- */
+  #letter-view{
+    position:relative;
+    z-index:1;
+    display:none;
+    width: min(92vw, 620px);
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--paper);
+    border-radius: 6px;
+    padding: 48px 40px 40px;
+    box-shadow: 0 24px 60px rgba(90,40,50,0.22);
+    border: 1px solid var(--line);
+    opacity:0;
+    transform: translateY(24px);
+  }
+  #letter-view.show{
+    display:block;
+    animation: rise 0.8s ease forwards 0.15s;
+  }
+  @keyframes rise{
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .corner-flower{
+    position:absolute;
+    width: 74px; height:74px;
+    opacity:0.9;
+  }
+  .corner-flower.tl{ top:-14px; left:-14px; transform: rotate(-8deg); }
+  .corner-flower.br{ bottom:-14px; right:-14px; transform: rotate(178deg); }
+
+  .letter-heading{
+    font-family:'Dancing Script', cursive;
+    font-size: 2.3rem;
+    color: var(--rose-dark);
+    text-align:center;
+    margin: 0 0 6px 0;
+  }
+  .letter-sub{
+    text-align:center;
+    font-style: italic;
+    color: var(--sage-dark);
+    font-size: 0.92rem;
+    margin: 0 0 30px 0;
+    letter-spacing: 0.3px;
+  }
+  .divider{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin: 0 0 26px 0;
+  }
+  .divider .line{ height:1px; width:60px; background: var(--line); }
+  .divider svg{ width:16px; height:16px; }
+
+  .letter-body{
+    font-size: 1.08rem;
+    line-height: 1.85;
+    max-width: 62ch;
+    margin: 0 auto;
+    color: var(--plum);
+  }
+  .letter-body p{ margin: 0 0 18px 0; }
+  .letter-body p:first-of-type::first-letter{
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.6rem;
+    color: var(--rose-dark);
+    margin-right: 2px;
+    line-height: 0;
+    position: relative;
+    top: 10px;
+  }
+
+  .signature{
+    text-align:right;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.9rem;
+    color: var(--rose-dark);
+    margin-top: 26px;
+  }
+
+  .music-btn{
+    position: fixed;
+    bottom: 22px; right: 22px;
+    z-index: 10;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: 0 10px 22px rgba(90,40,50,0.2);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: transform 0.2s ease;
+  }
+  .music-btn:hover{ transform: scale(1.06); }
+  .music-btn svg{ width:22px; height:22px; color: var(--rose-dark); }
+  .music-btn.playing svg.note{ animation: sway 1.4s ease-in-out infinite; }
+  @keyframes sway{
+    0%,100%{ transform: rotate(-6deg); }
+    50%{ transform: rotate(6deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .env-flap, #letter-view, .music-btn.playing svg.note{ animation:none !important; transition:none !important; }
+  }
+
+  @media (max-width: 480px){
+    .letter-heading{ font-size: 1.9rem; }
+    #letter-view{ padding: 40px 22px 30px; }
+    .corner-flower{ width:52px; height:52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-flowers" id="bgFlowers"></div>
+
+<div class="stage">
+
+  <!-- Vista del sobre -->
+  <div id="envelope-view">
+    <div class="envelope-wrap">
+      <div class="envelope" id="envelope">
+        <div class="env-body"></div>
+        <div class="env-shadow-fold"></div>
+        <div class="env-flap" id="flap"></div>
+        <button class="seal" id="sealBtn" aria-label="Abrir la carta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6">
+            <path d="M12 21s-7.5-4.6-10-9.3C0.3 8.1 2.3 4 6 4c2.2 0 3.7 1.3 4.5 2.7C11.3 5.3 12.8 4 15 4c3.7 0 5.7 4.1 4 7.7C19.5 16.4 12 21 12 21z" fill="#fff" opacity="0.15"/>
+            <path d="M12 21s-7.5-4.6-10-9.3C0.3 8.1 2.3 4 6 4c2.2 0 3.7 1.3 4.5 2.7C11.3 5.3 12.8 4 15 4c3.7 0 5.7 4.1 4 7.7C19.5 16.4 12 21 12 21z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <p class="open-label">Abrir aquí</p>
+  </div>
+
+  <!-- Vista de la carta -->
+  <div id="letter-view">
+    <svg class="corner-flower tl" viewBox="0 0 100 100"></svg>
+    <svg class="corner-flower br" viewBox="0 0 100 100"></svg>
+
+    <h1 class="letter-heading">Para ti</h1>
+    <p class="letter-sub">una carta pequeña para alguien enorme en mi vida</p>
+
+    <div class="divider">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#b5495b" stroke-width="1.4">
+        <path d="M12 20s-6.5-4-8.5-8C1.8 8.5 3.3 5 6.5 5c2 0 3.4 1.2 3.5 3 0.1-1.8 1.5-3 3.5-3 3.2 0 4.7 3.5 3 7-2 4-8 8-8 8z"/>
+      </svg>
+      <span class="line"></span>
+    </div>
+
+    <div class="letter-body" id="letterBody">
+      <p>Hola, mi amor, Feliz año y 5 Meses, gracias por todo y por lo Feliz que me haces siempre cada día, sé que hay veces que tenemos momentos de tristeza pero siempre lo hablamos para resolverlo, perdóname por todas las veces que te hecho sentir mal de velda, eres todo lo que siempre quise en mi vida y no te quiero perder jamás amorcito.</p>
+      <p>Gracias por las cosas pequeñas que haces sin darte cuenta mi amor: la forma en que te ríes, cómo me cuentas tu día, cómo haces que todo se sienta más Feliz y contento cuando estoy contigo mi vida.</p>
+      <p>Quiero que sepas que, esté donde esté, pienso en ti con una sonrisa. Eres de las personas que hacen que los días comunes se sientan especiales.</p>
+      <p>Esta carta es solo un pedacito de todo lo que siento por ti mi amor. Gracias por estar, por quedarte siempre, por ser tú todos los días, eres todo lo que quiero en mi Vida. Te amoo como no tienes idea.</p>
+    </div>
+
+    <p class="signature">Con todo mi cariño</p>
+  </div>
+
+</div>
+
+<button class="music-btn" id="musicBtn" aria-label="Reproducir música">
+  <svg class="note" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M9 18V5l12-2v13"/>
+    <circle cx="6" cy="18" r="3"/>
+    <circle cx="18" cy="16" r="3"/>
+  </svg>
+</button>
+
+<!--
+  Coloca aquí el archivo de audio de tu canción (por ejemplo "cancion.mp3")
+  en la misma carpeta que este HTML, y cambia el "src" de abajo.
+  No puedo incluir canciones con derechos de autor directamente en el código.
+-->
+<audio id="bgAudio" loop preload="none">
+  <source src="ANHELO.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  // ---- Flores SVG reutilizables ----
+  function flowerSVG(size, color, centerColor){
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+        <g fill="${color}" opacity="0.9">
+          <ellipse cx="50" cy="28" rx="14" ry="20"/>
+          <ellipse cx="50" cy="72" rx="14" ry="20"/>
+          <ellipse cx="28" cy="50" rx="20" ry="14"/>
+          <ellipse cx="72" cy="50" rx="20" ry="14"/>
+        </g>
+        <circle cx="50" cy="50" r="12" fill="${centerColor}"/>
+      </svg>
+    `;
+  }
+  function leafSVG(size, color){
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 100 60">
+        <path d="M2 30 C 20 -10, 80 -10, 98 30 C 80 70, 20 70, 2 30 Z" fill="${color}" opacity="0.85"/>
+      </svg>
+    `;
+  }
+
+  // Flores de fondo, esparcidas
+  const bg = document.getElementById('bgFlowers');
+  const palette = [
+    { petal:'#e7b3bd', center:'#b5495b' },
+    { petal:'#d7c98c', center:'#cf9a4c' },
+    { petal:'#c3cf9e', center:'#8a9a5b' },
+    { petal:'#f0d0d9', center:'#c2707e' }
+  ];
+  const positions = [
+    {top:'4%', left:'6%', size:70, rot:-12},
+    {top:'10%', left:'86%', size:56, rot:20},
+    {top:'80%', left:'10%', size:64, rot:8},
+    {top:'86%', left:'80%', size:78, rot:-18},
+    {top:'46%', left:'2%', size:44, rot:5},
+    {top:'40%', left:'92%', size:48, rot:-6}
+  ];
+  positions.forEach((p, i) => {
+    const c = palette[i % palette.length];
+    const div = document.createElement('div');
+    div.style.position='absolute';
+    div.style.top=p.top; div.style.left=p.left;
+    div.style.transform=`rotate(${p.rot}deg)`;
+    div.innerHTML = flowerSVG(p.size, c.petal, c.center);
+    bg.appendChild(div);
+  });
+
+  // Flores en las esquinas de la carta
+  document.querySelectorAll('.corner-flower').forEach((el, i) => {
+    el.outerHTML = `<div class="corner-flower ${el.classList.contains('tl')?'tl':'br'}">${flowerSVG(74, '#e7b3bd', '#b5495b')}</div>`;
+  });
+
+  // ---- Interacción: abrir sobre ----
+  const envelopeView = document.getElementById('envelope-view');
+  const letterView = document.getElementById('letter-view');
+  const envelope = document.getElementById('envelope');
+  const sealBtn = document.getElementById('sealBtn');
+  const audio = document.getElementById('bgAudio');
+  const musicBtn = document.getElementById('musicBtn');
+
+  function openLetter(){
+    if(envelope.classList.contains('opened')) return;
+    envelope.classList.add('opened');
+    setTimeout(() => {
+      envelopeView.classList.add('hidden');
+      letterView.classList.add('show');
+    }, 500);
+
+    // intenta reproducir música al abrir
+    audio.play().then(() => {
+      musicBtn.classList.add('playing');
+    }).catch(() => {
+      // el navegador puede bloquear autoplay; el usuario puede darle al botón
+    });
+  }
+
+  // Todo el sobre es clicable (no solo el sello), para que sea fácil de tocar en celular
+  envelope.addEventListener('click', openLetter);
+  sealBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openLetter();
+  });
+
+  musicBtn.addEventListener('click', () => {
+    if(audio.paused){
+      audio.play().then(()=> musicBtn.classList.add('playing'));
+    } else {
+      audio.pause();
+      musicBtn.classList.remove('playing');
+    }
+  });
+</script>
+
+</body>
+</html>
